@@ -1,0 +1,41 @@
+# name it whatever you want
+# CI is continuous integration 
+
+name: scrape
+# controls when the workflow will run
+on:
+  # workflow_dispatch means "I can click a button and force it to run"
+  workflow_dispatch:
+  # schedule/cron means "on a set schedule"
+  # https://en.wikipedia.org/wiki/Cron
+  schedule:
+    - cron: '*/5 * * * *'
+    
+jobs:
+  scrape:
+    # the system i want to run this on 
+    # for some reason, we love versions of linux
+    runs-on: ubuntu-latest
+    # Download all of the code from your repo
+    steps:
+      - name: Check out this repo
+        uses: actions/checkout@v2
+    # Set up Python 3.9
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install all necessary packages
+        run: pip install requests beautifulsoup4 pandas
+    # MAKE SURE YOUR SCRAPER FILENAME MATCHES THE FILENAME HERE
+      - name: Run the scraping script
+        # change to scraper.py to match filename 
+        run: python scraper.py
+      - name: Commit and push if content changed
+        run: |-
+          git config user.name "Automated"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "Latest data: ${timestamp}" || exit 0
+          git push
